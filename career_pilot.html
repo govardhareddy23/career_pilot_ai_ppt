@@ -1,0 +1,1456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CareerPilot AI — Multi-Agent Presentation</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg: #050912;
+      --surface: #0d1526;
+      --surface2: #111c35;
+      --border: rgba(99,132,255,0.18);
+      --accent: #6384ff;
+      --accent2: #a78bfa;
+      --accent3: #34d399;
+      --accent4: #fb923c;
+      --accent5: #f472b6;
+      --text: #e2e8f0;
+      --text-muted: #7c90b0;
+      --glow: 0 0 40px rgba(99,132,255,0.25);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── ANIMATED BACKGROUND ── */
+    .bg-mesh {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background:
+        radial-gradient(ellipse 80% 60% at 20% 10%, rgba(99,132,255,0.12) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 60% at 80% 80%, rgba(167,139,250,0.10) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 40% at 50% 50%, rgba(52,211,153,0.05) 0%, transparent 70%);
+    }
+    .floating-orb {
+      position: fixed; border-radius: 50%; filter: blur(80px); pointer-events: none; z-index: 0;
+    }
+    .orb1 { width:400px; height:400px; background:rgba(99,132,255,0.08); top:-100px; left:-100px; animation: drift1 20s ease-in-out infinite; }
+    .orb2 { width:500px; height:500px; background:rgba(167,139,250,0.07); bottom:-150px; right:-100px; animation: drift2 25s ease-in-out infinite; }
+    .orb3 { width:300px; height:300px; background:rgba(52,211,153,0.06); top:50%; left:50%; animation: drift3 18s ease-in-out infinite; }
+    @keyframes drift1 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(60px,40px)} }
+    @keyframes drift2 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(-40px,-60px)} }
+    @keyframes drift3 { 0%,100%{transform:translate(-50%,-50%) scale(1)} 50%{transform:translate(-50%,-50%) scale(1.3)} }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      padding: 0 2rem;
+      height: 64px;
+      display: flex; align-items: center; justify-content: space-between;
+      background: rgba(5,9,18,0.85);
+      backdrop-filter: blur(24px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 1.1rem; font-weight: 800; letter-spacing: -0.02em;
+    }
+    .nav-logo .rocket { font-size: 1.5rem; animation: bounce 2s ease-in-out infinite; }
+    @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)} }
+    .nav-logo span { background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .nav-links { display: flex; gap: 1rem; }
+    .nav-link {
+      padding: 6px 16px; border-radius: 20px; font-size: 0.82rem; font-weight: 500;
+      color: var(--text-muted); cursor: pointer; transition: all 0.2s;
+      border: 1px solid transparent;
+    }
+    .nav-link:hover, .nav-link.active {
+      color: var(--accent); border-color: var(--border);
+      background: rgba(99,132,255,0.08);
+    }
+
+    /* ── SLIDES ── */
+    .slide { position: relative; z-index: 1; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; padding: 100px 2rem 60px; }
+    .slide-container { max-width: 1200px; margin: 0 auto; width: 100%; }
+
+    /* ── HERO SLIDE ── */
+    #slide-hero { text-align: center; }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 6px 18px; border-radius: 20px;
+      background: rgba(99,132,255,0.1); border: 1px solid rgba(99,132,255,0.3);
+      font-size: 0.78rem; font-weight: 600; color: var(--accent); letter-spacing: 0.08em; text-transform: uppercase;
+      margin-bottom: 2rem;
+    }
+    .hero-title {
+      font-size: clamp(3rem, 7vw, 6rem);
+      font-weight: 900; letter-spacing: -0.04em; line-height: 1.05;
+      background: linear-gradient(135deg, #fff 30%, var(--accent) 60%, var(--accent2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      margin-bottom: 1.5rem;
+    }
+    .hero-sub {
+      font-size: 1.25rem; color: var(--text-muted); max-width: 680px; margin: 0 auto 3rem; line-height: 1.7;
+    }
+    .hero-stats {
+      display: flex; justify-content: center; gap: 3rem; flex-wrap: wrap; margin-bottom: 3rem;
+    }
+    .hero-stat { text-align: center; }
+    .hero-stat .number {
+      font-size: 2.5rem; font-weight: 900; letter-spacing: -0.04em;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .hero-stat .label { font-size: 0.85rem; color: var(--text-muted); margin-top: 4px; }
+    .scroll-hint { font-size: 0.8rem; color: var(--text-muted); display: flex; align-items: center; gap: 8px; justify-content: center; }
+    .scroll-hint::before { content: ''; width: 1px; height: 40px; background: linear-gradient(to bottom, transparent, var(--accent)); }
+
+    /* ── SECTION TITLES ── */
+    .section-label {
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase;
+      color: var(--accent); margin-bottom: 0.75rem;
+    }
+    .section-title {
+      font-size: clamp(2rem, 4vw, 3rem); font-weight: 800; letter-spacing: -0.03em; line-height: 1.15;
+      margin-bottom: 1rem;
+    }
+    .section-desc { color: var(--text-muted); font-size: 1.05rem; line-height: 1.7; max-width: 700px; margin-bottom: 3rem; }
+
+    /* ── ARCHITECTURE DIAGRAM ── */
+    .arch-diagram {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 20px; padding: 2rem; overflow-x: auto;
+    }
+    .arch-row { display: flex; align-items: center; justify-content: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+    .arch-box {
+      padding: 12px 20px; border-radius: 12px; font-size: 0.82rem; font-weight: 600;
+      text-align: center; border: 1px solid; min-width: 130px;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .arch-box:hover { transform: translateY(-3px); }
+    .arch-box.blue { background: rgba(99,132,255,0.12); border-color: rgba(99,132,255,0.4); color: #a5b4fc; box-shadow: 0 4px 20px rgba(99,132,255,0.1); }
+    .arch-box.green { background: rgba(52,211,153,0.12); border-color: rgba(52,211,153,0.4); color: #6ee7b7; }
+    .arch-box.purple { background: rgba(167,139,250,0.12); border-color: rgba(167,139,250,0.4); color: #c4b5fd; }
+    .arch-box.orange { background: rgba(251,146,60,0.12); border-color: rgba(251,146,60,0.4); color: #fdba74; }
+    .arch-box.pink { background: rgba(244,114,182,0.12); border-color: rgba(244,114,182,0.4); color: #f9a8d4; }
+    .arch-arrow { color: var(--text-muted); font-size: 1.5rem; }
+    .arch-connector { width: 2px; height: 30px; background: linear-gradient(to bottom, var(--accent), var(--accent2)); margin: 0 auto; }
+
+    /* ── AGENTS GRID ── */
+    .agents-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 1.25rem;
+    }
+    .agent-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      transition: all 0.3s;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+    .agent-card::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(99,132,255,0.05), transparent);
+      opacity: 0; transition: opacity 0.3s;
+    }
+    .agent-card:hover { border-color: rgba(99,132,255,0.4); transform: translateY(-4px); box-shadow: var(--glow); }
+    .agent-card:hover::before { opacity: 1; }
+    .agent-card-header { display: flex; align-items: flex-start; gap: 1rem; margin-bottom: 1rem; }
+    .agent-icon {
+      width: 48px; height: 48px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem; flex-shrink: 0;
+    }
+    .agent-name { font-size: 0.95rem; font-weight: 700; margin-bottom: 3px; }
+    .agent-tag {
+      display: inline-block; padding: 2px 10px; border-radius: 8px;
+      font-size: 0.68rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;
+    }
+    .tag-core { background: rgba(99,132,255,0.15); color: #a5b4fc; }
+    .tag-pipeline { background: rgba(52,211,153,0.15); color: #6ee7b7; }
+    .tag-enhancement { background: rgba(167,139,250,0.15); color: #c4b5fd; }
+    .tag-intelligence { background: rgba(251,146,60,0.15); color: #fdba74; }
+    .tag-safety { background: rgba(244,114,182,0.15); color: #f9a8d4; }
+    .agent-desc { font-size: 0.85rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 1rem; }
+    .agent-features { list-style: none; }
+    .agent-features li {
+      font-size: 0.8rem; color: var(--text-muted); padding: 4px 0;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .agent-features li::before {
+      content: ''; width: 5px; height: 5px; border-radius: 50%;
+      background: var(--accent); flex-shrink: 0;
+    }
+
+    /* AGENT COLORS */
+    .icon-supervisor { background: linear-gradient(135deg, #6384ff, #a78bfa); }
+    .icon-planning { background: linear-gradient(135deg, #34d399, #059669); }
+    .icon-profile { background: linear-gradient(135deg, #fb923c, #ea580c); }
+    .icon-scout { background: linear-gradient(135deg, #f472b6, #db2777); }
+    .icon-ranking { background: linear-gradient(135deg, #60a5fa, #2563eb); }
+    .icon-skill { background: linear-gradient(135deg, #fbbf24, #d97706); }
+    .icon-resume { background: linear-gradient(135deg, #a78bfa, #7c3aed); }
+    .icon-cover { background: linear-gradient(135deg, #34d399, #059669); }
+    .icon-application { background: linear-gradient(135deg, #f87171, #dc2626); }
+    .icon-interview { background: linear-gradient(135deg, #6384ff, #4f46e5); }
+    .icon-tracking { background: linear-gradient(135deg, #fb923c, #ea580c); }
+    .icon-github { background: linear-gradient(135deg, #94a3b8, #475569); }
+    .icon-portfolio { background: linear-gradient(135deg, #f472b6, #db2777); }
+    .icon-networking { background: linear-gradient(135deg, #60a5fa, #0ea5e9); }
+    .icon-notification { background: linear-gradient(135deg, #fbbf24, #f59e0b); }
+    .icon-learning { background: linear-gradient(135deg, #34d399, #10b981); }
+    .icon-salary { background: linear-gradient(135deg, #a78bfa, #8b5cf6); }
+
+    /* ── WORKFLOW ── */
+    .workflow-container { position: relative; }
+    .workflow-steps {
+      display: flex; flex-direction: column; gap: 1rem;
+    }
+    .workflow-step {
+      display: flex; gap: 1.5rem; align-items: flex-start;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; padding: 1.25rem 1.5rem;
+      transition: all 0.3s; position: relative;
+    }
+    .workflow-step:hover { border-color: rgba(99,132,255,0.4); transform: translateX(6px); }
+    .step-number {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 0.85rem; flex-shrink: 0;
+    }
+    .step-content { flex: 1; }
+    .step-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 4px; }
+    .step-desc { font-size: 0.82rem; color: var(--text-muted); line-height: 1.6; }
+    .step-agents {
+      display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;
+    }
+    .step-agent-chip {
+      padding: 3px 10px; border-radius: 8px;
+      font-size: 0.7rem; font-weight: 600;
+      background: rgba(99,132,255,0.12); color: var(--accent);
+      border: 1px solid rgba(99,132,255,0.2);
+    }
+    .workflow-connector {
+      width: 2px; height: 20px;
+      background: linear-gradient(to bottom, rgba(99,132,255,0.5), rgba(167,139,250,0.3));
+      margin-left: 34px;
+    }
+
+    /* ── UI TABS ── */
+    .ui-tabs { display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap; }
+    .ui-tab {
+      padding: 10px 20px; border-radius: 12px; cursor: pointer;
+      font-size: 0.85rem; font-weight: 600; transition: all 0.2s;
+      border: 1px solid var(--border); color: var(--text-muted);
+    }
+    .ui-tab.active { background: rgba(99,132,255,0.15); border-color: rgba(99,132,255,0.4); color: var(--accent); }
+    .ui-tab:hover:not(.active) { border-color: rgba(99,132,255,0.2); color: var(--text); }
+    .ui-panel { display: none; }
+    .ui-panel.active { display: block; }
+
+    /* ── MOCKUP UI ── */
+    .mockup-window {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.4);
+    }
+    .mockup-titlebar {
+      background: rgba(255,255,255,0.03); padding: 12px 16px;
+      display: flex; align-items: center; gap: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .titlebar-dots { display: flex; gap: 6px; }
+    .dot { width: 12px; height: 12px; border-radius: 50%; }
+    .dot-red { background: #ff5f57; }
+    .dot-yellow { background: #ffbd2e; }
+    .dot-green { background: #28c941; }
+    .titlebar-title { font-size: 0.78rem; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+    .mockup-tabs {
+      display: flex; border-bottom: 1px solid var(--border);
+    }
+    .mockup-tab {
+      padding: 12px 20px; font-size: 0.8rem; font-weight: 600;
+      cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s;
+      color: var(--text-muted);
+    }
+    .mockup-tab.active { border-color: var(--accent); color: var(--accent); }
+    .mockup-content { padding: 1.5rem; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+    .form-field { display: flex; flex-direction: column; gap: 6px; }
+    .form-label { font-size: 0.72rem; font-weight: 600; color: var(--text-muted); }
+    .form-input {
+      background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+      border-radius: 8px; padding: 10px 14px;
+      font-size: 0.82rem; color: var(--text); font-family: inherit;
+    }
+    .form-input:focus { outline: none; border-color: var(--accent); }
+    .form-textarea {
+      background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+      border-radius: 8px; padding: 10px 14px;
+      font-size: 0.82rem; color: var(--text); font-family: inherit;
+      resize: vertical; min-height: 80px; width: 100%;
+    }
+    .btn { padding: 10px 20px; border-radius: 10px; font-weight: 700; font-size: 0.82rem; cursor: pointer; transition: all 0.2s; border: none; }
+    .btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: white; }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(99,132,255,0.35); }
+    .btn-secondary { background: rgba(255,255,255,0.07); border: 1px solid var(--border); color: var(--text); }
+    .btn-success { background: linear-gradient(135deg, #34d399, #059669); color: white; }
+    .btn-danger { background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); color: #f87171; }
+    .metric-row { display: flex; gap: 1rem; margin-bottom: 1.5rem; }
+    .metric-card {
+      flex: 1; background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+      border-radius: 12px; padding: 1rem;
+    }
+    .metric-label { font-size: 0.7rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; }
+    .metric-value { font-size: 1.8rem; font-weight: 800; margin-top: 4px; }
+    .metric-value.blue { color: var(--accent); }
+    .metric-value.green { color: var(--accent3); }
+    .metric-value.orange { color: var(--accent4); }
+    .alert-warning {
+      background: rgba(251,146,60,0.1); border: 1px solid rgba(251,146,60,0.3);
+      border-radius: 10px; padding: 12px 16px;
+      font-size: 0.82rem; color: #fdba74; display: flex; align-items: center; gap: 10px;
+      margin-bottom: 1rem;
+    }
+    .job-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 14px; background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px;
+    }
+    .job-row:hover { border-color: rgba(99,132,255,0.2); background: rgba(99,132,255,0.04); }
+    .job-title-text { font-size: 0.85rem; font-weight: 600; }
+    .job-company { font-size: 0.75rem; color: var(--text-muted); }
+    .score-badge {
+      padding: 4px 10px; border-radius: 8px; font-size: 0.72rem; font-weight: 700;
+    }
+    .score-high { background: rgba(52,211,153,0.15); color: #34d399; }
+    .score-mid { background: rgba(251,146,60,0.15); color: #fb923c; }
+    .log-line {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.72rem;
+      padding: 4px 0; display: flex; align-items: flex-start; gap: 10px;
+    }
+    .log-line .log-prefix { color: var(--accent); }
+    .log-line .log-text { color: var(--text-muted); }
+    .status-chip {
+      padding: 3px 10px; border-radius: 6px; font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
+    }
+    .status-pending { background: rgba(251,146,60,0.15); color: #fdba74; }
+    .status-approved { background: rgba(52,211,153,0.15); color: #34d399; }
+    .status-applied { background: rgba(99,132,255,0.15); color: #a5b4fc; }
+    .expander {
+      border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px; overflow: hidden;
+    }
+    .expander-header {
+      padding: 12px 16px; background: rgba(255,255,255,0.03);
+      font-size: 0.82rem; font-weight: 600; cursor: pointer;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .expander-body {
+      padding: 12px 16px; font-size: 0.78rem; color: var(--text-muted);
+      line-height: 1.6; background: rgba(255,255,255,0.01);
+    }
+    .bar-chart { margin-top: 1rem; }
+    .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .bar-label { font-size: 0.75rem; width: 120px; color: var(--text-muted); flex-shrink: 0; }
+    .bar-track { flex: 1; background: rgba(255,255,255,0.06); border-radius: 4px; height: 8px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 4px; }
+
+    /* ── HOW IT WORKS ── */
+    .how-it-works { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+    .how-section { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; }
+    .how-section h3 { font-size: 1rem; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; gap: 8px; }
+    .how-list { list-style: none; }
+    .how-list li {
+      font-size: 0.82rem; color: var(--text-muted); padding: 8px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      display: flex; align-items: flex-start; gap: 10px; line-height: 1.5;
+    }
+    .how-list li:last-child { border: none; }
+    .how-list li .bullet {
+      width: 6px; height: 6px; border-radius: 50%; background: var(--accent);
+      flex-shrink: 0; margin-top: 6px;
+    }
+    .code-block {
+      background: rgba(0,0,0,0.4); border: 1px solid var(--border);
+      border-radius: 12px; padding: 1.25rem; overflow-x: auto;
+      font-family: 'JetBrains Mono', monospace; font-size: 0.75rem;
+      color: #94a3b8; line-height: 1.8;
+    }
+    .code-block .kw { color: #a78bfa; }
+    .code-block .str { color: #34d399; }
+    .code-block .comment { color: #4b5563; font-style: italic; }
+    .code-block .fn { color: #60a5fa; }
+
+    /* ── TECH STACK ── */
+    .tech-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; }
+    .tech-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 1.25rem; text-align: center;
+      transition: all 0.3s;
+    }
+    .tech-card:hover { border-color: rgba(99,132,255,0.4); transform: translateY(-3px); }
+    .tech-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+    .tech-name { font-size: 0.9rem; font-weight: 700; }
+    .tech-desc { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; }
+
+    /* ── MERMAID FLOW ── */
+    .flow-diagram {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 20px; padding: 2rem; overflow-x: auto;
+    }
+    .flow-row {
+      display: flex; align-items: center; justify-content: center;
+      gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.5rem;
+    }
+    .flow-node {
+      padding: 8px 16px; border-radius: 10px;
+      font-size: 0.78rem; font-weight: 700; border: 1px solid;
+    }
+    .flow-node.start { background: rgba(52,211,153,0.15); border-color: rgba(52,211,153,0.4); color: #34d399; }
+    .flow-node.agent { background: rgba(99,132,255,0.12); border-color: rgba(99,132,255,0.3); color: #a5b4fc; }
+    .flow-node.supervisor { background: rgba(167,139,250,0.15); border-color: rgba(167,139,250,0.4); color: #c4b5fd; }
+    .flow-node.end { background: rgba(244,114,182,0.15); border-color: rgba(244,114,182,0.4); color: #f9a8d4; }
+    .flow-node.human { background: rgba(251,146,60,0.15); border-color: rgba(251,146,60,0.4); color: #fdba74; }
+    .flow-arrow { font-size: 1.2rem; color: var(--text-muted); }
+    .flow-label { font-size: 0.68rem; color: var(--text-muted); text-align: center; }
+
+    /* ── FOOTER ── */
+    footer {
+      position: relative; z-index: 1;
+      text-align: center; padding: 3rem 2rem;
+      border-top: 1px solid var(--border);
+      color: var(--text-muted); font-size: 0.82rem;
+    }
+    footer strong { color: var(--accent); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      .agents-grid { grid-template-columns: 1fr; }
+      .how-it-works { grid-template-columns: 1fr; }
+      .form-row { grid-template-columns: 1fr; }
+      .hero-stats { gap: 2rem; }
+      .nav-links { display: none; }
+      .metric-row { flex-wrap: wrap; }
+    }
+
+    /* ── SCROLL ANIMATIONS ── */
+    .fade-in { opacity: 0; transform: translateY(30px); transition: opacity 0.6s, transform 0.6s; }
+    .fade-in.visible { opacity: 1; transform: translateY(0); }
+
+    /* ── HIGHLIGHT ── */
+    .highlight-box {
+      background: linear-gradient(135deg, rgba(99,132,255,0.08), rgba(167,139,250,0.05));
+      border: 1px solid rgba(99,132,255,0.25);
+      border-radius: 16px; padding: 1.5rem; margin-top: 2rem;
+    }
+    .highlight-box h4 { font-size: 0.9rem; font-weight: 700; margin-bottom: 0.75rem; color: var(--accent); }
+    .highlight-box p { font-size: 0.82rem; color: var(--text-muted); line-height: 1.7; }
+
+    /* divider */
+    .divider { height: 1px; background: var(--border); margin: 0 2rem; }
+  </style>
+</head>
+<body>
+
+<!-- BG -->
+<div class="bg-mesh"></div>
+<div class="floating-orb orb1"></div>
+<div class="floating-orb orb2"></div>
+<div class="floating-orb orb3"></div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">
+    <span class="rocket">🚀</span>
+    <span>CareerPilot AI</span>
+  </div>
+  <div class="nav-links">
+    <div class="nav-link active" onclick="scrollTo('slide-hero')">Overview</div>
+    <div class="nav-link" onclick="scrollTo('slide-agents')">Agents</div>
+    <div class="nav-link" onclick="scrollTo('slide-workflow')">Workflow</div>
+    <div class="nav-link" onclick="scrollTo('slide-ui')">UI Guide</div>
+    <div class="nav-link" onclick="scrollTo('slide-tech')">Tech Stack</div>
+    <div class="nav-link" onclick="scrollTo('slide-how')">How It Works</div>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 1: HERO -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<section class="slide" id="slide-hero">
+  <div class="slide-container">
+    <div style="text-align:center">
+      <div class="hero-badge fade-in visible">🤖 Multi-Agent AI System · LangGraph + Gemini</div>
+      <h1 class="hero-title fade-in visible">CareerPilot AI</h1>
+      <p class="hero-sub fade-in visible">
+        An autonomous multi-agent career operating system that discovers, scores, tailors, and prepares job applications — with a human-in-the-loop safety checkpoint before anything is ever submitted.
+      </p>
+      <div class="hero-stats fade-in visible">
+        <div class="hero-stat">
+          <div class="number">17</div>
+          <div class="label">Specialist Agents</div>
+        </div>
+        <div class="hero-stat">
+          <div class="number">4</div>
+          <div class="label">UI Tabs</div>
+        </div>
+        <div class="hero-stat">
+          <div class="number">10</div>
+          <div class="label">REST API Endpoints</div>
+        </div>
+        <div class="hero-stat">
+          <div class="number">8</div>
+          <div class="label">Database Tables</div>
+        </div>
+      </div>
+      <div class="scroll-hint fade-in visible">Scroll to explore each agent &amp; UI component</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 2: ARCHITECTURE -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div class="divider"></div>
+<section class="slide" id="slide-arch" style="min-height:auto; padding: 80px 2rem;">
+  <div class="slide-container">
+    <div class="section-label fade-in">System Architecture</div>
+    <h2 class="section-title fade-in">How Everything Connects</h2>
+    <p class="section-desc fade-in">Three-layer architecture: Streamlit frontend → FastAPI REST layer → LangGraph multi-agent workflow, backed by SQLite/Postgres and ChromaDB.</p>
+
+    <div class="arch-diagram fade-in">
+      <!-- Row 1: User -->
+      <div class="arch-row">
+        <div class="arch-box blue" style="min-width:160px">🖥️ Streamlit Frontend<br><small style="color:#7c90b0;font-weight:400">4-tab dashboard</small></div>
+      </div>
+      <div class="arch-connector"></div>
+      <!-- Row 2: API -->
+      <div class="arch-row">
+        <div class="arch-box green" style="min-width:200px">⚡ FastAPI Backend<br><small style="color:#7c90b0;font-weight:400">REST API · :8000</small></div>
+      </div>
+      <div class="arch-connector"></div>
+      <!-- Row 3: LangGraph -->
+      <div class="arch-row">
+        <div class="arch-box purple" style="min-width:220px">🧠 LangGraph Workflow<br><small style="color:#7c90b0;font-weight:400">Supervisor orchestration</small></div>
+      </div>
+      <!-- Row 4: branches -->
+      <div style="display:flex; justify-content:center; gap:2rem; flex-wrap:wrap; margin-top:1rem;">
+        <div style="display:flex; flex-direction:column; align-items:center; gap:0.5rem;">
+          <div class="arch-connector" style="height:20px"></div>
+          <div class="arch-box blue">🤖 17 Agents<br><small style="color:#7c90b0;font-weight:400">Specialist workers</small></div>
+        </div>
+        <div style="display:flex; flex-direction:column; align-items:center; gap:0.5rem;">
+          <div class="arch-connector" style="height:20px"></div>
+          <div class="arch-box green">🗄️ SQLite/Postgres<br><small style="color:#7c90b0;font-weight:400">Structured data</small></div>
+        </div>
+        <div style="display:flex; flex-direction:column; align-items:center; gap:0.5rem;">
+          <div class="arch-connector" style="height:20px"></div>
+          <div class="arch-box orange">🔍 ChromaDB RAG<br><small style="color:#7c90b0;font-weight:400">Per-user vector store</small></div>
+        </div>
+        <div style="display:flex; flex-direction:column; align-items:center; gap:0.5rem;">
+          <div class="arch-connector" style="height:20px"></div>
+          <div class="arch-box pink">🛠️ MCP Tools<br><small style="color:#7c90b0;font-weight:400">GitHub · JobBoards · Notify</small></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 3: ALL AGENTS -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div class="divider"></div>
+<section class="slide" id="slide-agents" style="min-height:auto; padding: 80px 2rem;">
+  <div class="slide-container">
+    <div class="section-label fade-in">Agent Directory</div>
+    <h2 class="section-title fade-in">All 17 Specialist Agents</h2>
+    <p class="section-desc fade-in">Each agent is a self-contained Python class extending <code style="background:rgba(99,132,255,0.1);padding:2px 8px;border-radius:6px;font-family:monospace;font-size:0.85em">BaseAgent</code>. They receive shared state from LangGraph, execute their task using the LLM, and return a partial state update.</p>
+
+    <div class="agents-grid">
+
+      <!-- SUPERVISOR -->
+      <div class="agent-card fade-in">
+        <div class="agent-card-header">
+          <div class="agent-icon icon-supervisor">🎯</div>
+          <div>
+            <div class="agent-name">Supervisor Agent</div>
+            <span class="agent-tag tag-core">Core / Orchestration</span>
+          </div>
+        </div>
+        <div class="agent-desc">The top of the LangGraph hierarchy. Routes execution between all specialist agents using a deterministic plan-following strategy (no LLM call for normal operation) and a hard step-cap safety valve (MAX_STEPS=12) to prevent infinite loops.</div>
+        <ul class="agent-features">
+          <li>Walks state["plan"] in order — no LLM needed in common case</li>
+          <li>Hard cap of 12 supervisor turns before force-finishing</li>
+          <li>Human-in-the-loop halt: pauses if approval_status = "pending"</li>
+          <li>LLM fallback only for off-plan / free-form tasks</li>
+          <li>Guards against LLM re-picking already-completed agents</li>
+        </ul>
+      </div>
+
+      <!-- PLANNING -->
+      <div class="agent-card fade-in">
+        <div class="agent-card-header">
+          <div class="agent-icon icon-planning">📋</div>
+          <div>
+            <div class="agent-name">Planning Agent</div>
+            <span class="agent-tag tag-core">Core / Orchestration</span>
+          </div>
+        </div>
+        <div class="agent-desc">Runs first in every pipeline. Parses the user's natural-language task and uses the LLM to produce an ordered JSON list of specialist agents to invoke. The Supervisor then follows this plan deterministically.</div>
+        <ul class="agent-features">
+          <li>Converts free-text task → ordered agent plan array</li>
+          <li>Knows a full "apply" flow: scout→rank→gap→resume→cover→app</li>
+          <li>Includes profile_intelligence if profile not yet built</li>
+          <li>Safe fallback: ["job_scout","job_ranking"] if LLM fails</li>
+        </ul>
+      </div>
+
+      <!-- PROFILE INTELLIGENCE -->
+      <div class="agent-card fade-in">
+        <div class="agent-card-header">
+          <div class="agent-icon icon-profile">👤</div>
+          <div>
+            <div class="agent-name">Profile Intelligence Agent</div>
+            <span class="agent-tag tag-pipeline">Core Pipeline</span>
+          </div>
+        </div>
+        <div class="agent-desc">Analyzes resume text and external profiles (GitHub via MCP), extracts structured data using the LLM, persists it to the database, and indexes it into the per-user ChromaDB RAG store for retrieval by downstream agents.</div>
+        <ul class="agent-features">
+          <li>Extracts: skills, experience, projects, education, certifications, achievements</li>
+          <li>Fetches live GitHub profile via MCP tool</li>
+          <li>Indexes resume + project docs into ChromaDB (user-scoped)</li>
+          <li>Persists structured JSON to UserProfile table</li>
+          <li>Up to 15,000 characters of combined profile text analyzed</li>
+        </ul>
+      </div>
+
+      <!-- JOB SCOUT -->
+      <div class="agent-card fade-in">
+        <div class="agent-card-header">
+          <div class="agent-icon icon-scout">🔍</div>
+          <div>
+            <div class="agent-name">Job Scout Agent</div>
+            <span class="agent-tag tag-pipeline">Core Pipeline</span>
+          </div>
+        </div>
+        <div class="agent-desc">Generates 2–3 optimized search queries from the user's profile (skills, roles, location), then fans out across LinkedIn, Indeed, Naukri, and Wellfound via the job-board MCP tool. Deduplicates by URL before persisting.</div>
+        <ul class="agent-features">
+          <li>LLM-generated high-signal search queries (not generic role names)</li>
+          <li>Searches LinkedIn, Indeed, Naukri, Wellfound</li>
+          <li>URL-based deduplication prevents duplicate DB records</li>
+          <li>Sets initial status="discovered" on all new Job rows</li>
+          <li>Returns raw_jobs list for downstream ranking</li>
+        </ul>
+      </div>
+
+      <!-- JOB RANKING -->
+      <div class="agent-card fade-in">
+        <div class="agent-card-header">
+          <div class="agent-icon icon-ranking">⭐</div>
+          <div>
+            <div class="agent-name">Job Ranking Agent</div>
+            <span class="agent-tag tag-pipeline">Core Pipeline</span>
+          </div>
+        </div>
+        <div class="agent-desc">Scores every discovered job 0–100 using a weighted multi-factor algorithm (no LLM call required). Selects the highest-scoring job as current_job to drive the per-job sub-pipeline.</div>
+        <ul class="agent-features">
+          <li>Skill match (40% weight) — set intersection on required vs. user skills</li>
+          <li>Experience match (15%) — seniority level vs. estimated years</li>
+          <li>Location match (15%) — exact / remote / mismatch scoring</li>
+          <li>Remote preference match (10%)</li>
+          <li>Salary match (10%) — posted range vs. min expectation</li>
+          <li>Company quality heuristic (10%)</li>
+        </ul>
+      </div>
+
+      <!-- SKILL GAP -->
+      <div class="agent-card fade-in">
+        <div class="agent-card-header">
+          <div class="agent-icon icon-skill">🎓</div>
+          <div>
+            <div class="agent-name">Skill Gap Agent</div>
+            <span class="agent-tag tag-pipeline">Core Pipeline</span>
+          </div>
+        </div>
+        <div class="agent-desc">Compares the current job's requirements against the user's profile and identifies missing skills, certifications, and technologies. Generates a prioritized learning roadmap saved to the SkillGap table.</div>
+        <ul class="agent-features">
+          <li>Identifies missing_skills, missing_certifications, missing_technologies</li>
+          <li>Produces learning_recommendations with priority levels (high/medium/low)</li>
+          <li>Recommends resource types: course, doc, project, cert</li>
+          <li>Persists gap analysis to SkillGap table (per job)</li>
+          <li>Gap data flows into Interview Prep and Learning agents</li>
+        </ul>
+      </div>
+
+      <!-- RESUME OPTIMIZATION -->
+      <div class="agent-card fade-in">
+        <div class="agent-card-header">
+          <div class="agent-icon icon-resume">📄</div>
+          <div>
+            <div class="agent-name">Resume Optimization Agent</div>
+            <span class="agent-tag tag-pipeline">Core Pipeline</span>
+          </div>
+        </div>
+        <div class="agent-desc">Generates a tailored, ATS-optimized version of the user's resume for the current job. Uses RAG retrieval to ground the output in the user's actual past work. Calculates an ATS keyword coverage score.</div>
+        <ul class="agent-features">
+          <li>RAG-grounded: top-4 relevant chunks retrieved from ChromaDB</li>
+          <li>Rewrites bullets with strong action verbs + job keywords</li>
+          <li>Output: markdown with Summary, Skills, Experience, Projects, Education</li>
+          <li>ATS score = keyword coverage % (required skills found in resume)</li>
+          <li>Truthful: only reorganizes and rephrases, never invents experience</li>
+        </ul>
+      </div>
+
+      <!-- COVER LETTER -->
+      <div class="agent-card fade-in">
+        <div class="agent-card-header">
+          <div class="agent-icon icon-cover">✉️</div>
+          <div>
+            <div class="agent-name">Cover Letter Agent</div>
+            <span class="agent-tag tag-pipeline">Core Pipeline</span>
+          </div>
+        </div>
+        <div class="agent-desc">Writes a personalized cover letter (under 350 words) referencing specific projects/experiences from the user's profile. Also generates three outreach message templates: recruiter, referral request, and networking.</div>
+        <ul class="agent-features">
+          <li>Concise (&lt;350 words), warm-professional tone</li>
+          <li>References 1–2 specific projects/experiences for personalization</li>
+          <li>Recruiter outreach message (LinkedIn-style)</li>
+          <li>Referral request message template</li>
+          <li>General networking message template</li>
+        </ul>
+      </div>
+
+      <!-- APPLICATION -->
+      <div class="agent-card fade-in">
+        <div class="agent-card-header">
+          <div class="agent-icon icon-application">🔐</div>
+          <div>
+            <div class="agent-name">Application Agent</div>
+            <span class="agent-tag tag-safety">Human-in-the-Loop</span>
+          </div>
+        </div>
+        <div class="agent-desc">Packages the tailored resume + cover letter + outreach messages into an Application record. Sets approval_status="pending" and halts the LangGraph graph — the pipeline NEVER auto-submits. User must explicitly approve via the UI.</div>
+        <ul class="agent-features">
+          <li>NEVER submits applications automatically (critical safety requirement)</li>
+          <li>Sets requires_approval=True → Supervisor pauses to END</li>
+          <li>Recommends apply method: easy_apply / company_portal / email</li>
+          <li>Saves full package to Application table (resume, cover letter, outreach)</li>
+          <li>Updates job status to "awaiting_approval"</li>
+        </ul>
+      </div>
+
+      <!-- INTERVIEW PREP -->
+      <div class="agent-card fade-in">
+        <div class="agent-card-header">
+          <div class="agent-icon icon-interview">🎤</div>
+          <div>
+            <div class="agent-name">Interview Prep Agent</div>
+            <span class="agent-tag tag-pipeline">Core Pipeline</span>
+          </div>
+        </div>
+        <div class="agent-desc">For shortlisted jobs, generates comprehensive interview preparation material including company research, technical questions, behavioral questions (STAR format), DSA roadmap, and a mock interview script.</div>
+        <ul class="agent-features">
+          <li>Company research summary (culture, focus, recent direction)</li>
+          <li>6–8 technical interview questions tailored to the job</li>
+          <li>5 behavioral / STAR-format questions</li>
+          <li>DSA roadmap: 5–8 topics ordered by priority</li>
+          <li>Mock interview opening script for practice</li>
+        </ul>
+      </div>
+
+      <!-- TRACKING -->
+      <div class="agent-card fade-in">
+        <div class="agent-card-header">
+          <div class="agent-icon icon-tracking">📊</div>
+          <div>
+            <div class="agent-name">Tracking Agent</div>
+            <span class="agent-tag tag-pipeline">Core Pipeline</span>
+          </div>
+        </div>
+        <div class="agent-desc">Updates job application status through the full lifecycle and computes dashboard analytics: total jobs, status breakdown, applied count, and application-to-interview conversion rate.</div>
+        <ul class="agent-features">
+          <li>Status lifecycle: discovered→scored→resume_ready→awaiting_approval→approved→applied→assessment→interview→offer/rejected</li>
+          <li>Creates TrackingEvent audit trail on every status change</li>
+          <li>Computes conversion rate: interviews / applied applications</li>
+          <li>Dashboard data available via API for bar charts and tables</li>
+        </ul>
+      </div>
+
+      <!-- GITHUB ENHANCEMENT -->
+      <div class="agent-card fade-in">
+        <div class="agent-card-header">
+          <div class="agent-icon icon-github">🐙</div>
+          <div>
+            <div class="agent-name">GitHub Enhancement Agent</div>
+            <span class="agent-tag tag-enhancement">Enhancement</span>
+          </div>
+        </div>
+        <div class="agent-desc">Fetches the user's public GitHub repositories via the MCP tool and provides actionable improvement suggestions to make their profile more impressive to recruiters.</div>
+        <ul class="agent-features">
+          <li>README improvement suggestions per repository</li>
+          <li>Missing documentation identification</li>
+          <li>Architecture diagram recommendations</li>
+          <li>Missing tests / test coverage gaps</li>
+          <li>Dockerization and CI/CD pipeline suggestions</li>
+        </ul>
+      </div>
+
+      <!-- PORTFOLIO ENHANCEMENT -->
+      <div class="agent-card fade-in">
+        <div class="agent-card-header">
+          <div class="agent-icon icon-portfolio">🌐</div>
+          <div>
+            <div class="agent-name">Portfolio Enhancement Agent</div>
+            <span class="agent-tag tag-enhancement">Enhancement</span>
+          </div>
+        </div>
+        <div class="agent-desc">Analyzes the user's portfolio website and suggests new project ideas, better descriptions focused on impact/metrics, SEO improvements, technical blog topics, and personal branding changes.</div>
+        <ul class="agent-features">
+          <li>2–3 new project ideas aligned to target roles</li>
+          <li>Better project descriptions (focus: impact + metrics)</li>
+          <li>SEO: meta tags, keywords, page title suggestions</li>
+          <li>3 technical blog post topics to demonstrate expertise</li>
+          <li>Personal branding: tagline, about section angle</li>
+        </ul>
+      </div>
+
+      <!-- NETWORKING -->
+      <div class="agent-card fade-in">
+        <div class="agent-card-header">
+          <div class="agent-icon icon-networking">🤝</div>
+          <div>
+            <div class="agent-name">Networking Agent</div>
+            <span class="agent-tag tag-enhancement">Enhancement</span>
+          </div>
+        </div>
+        <div class="agent-desc">Generates a LinkedIn search strategy to find recruiters, hiring managers, and alumni at the target company, plus personalized message templates for each persona type.</div>
+        <ul class="agent-features">
+          <li>4–6 LinkedIn search terms to find the right people</li>
+          <li>Recruiter outreach message template</li>
+          <li>Hiring manager / team lead message template</li>
+          <li>Alumni connection message template</li>
+          <li>Human-controlled: generates templates, user sends them</li>
+        </ul>
+      </div>
+
+      <!-- NOTIFICATION -->
+      <div class="agent-card fade-in">
+        <div class="agent-card-header">
+          <div class="agent-icon icon-notification">🔔</div>
+          <div>
+            <div class="agent-name">Notification Agent</div>
+            <span class="agent-tag tag-intelligence">Intelligence</span>
+          </div>
+        </div>
+        <div class="agent-desc">Composes and sends daily summary notifications across Email, Telegram, and Discord. Reports: new jobs discovered, applications awaiting approval, and active interview processes.</div>
+        <ul class="agent-features">
+          <li>Counts: new jobs discovered, pending approvals, active interviews</li>
+          <li>Channels: Email (SMTP), Telegram Bot, Discord Webhook</li>
+          <li>Saves Notification records to DB for history tracking</li>
+          <li>Reports "no channels configured" gracefully if env vars missing</li>
+        </ul>
+      </div>
+
+      <!-- LEARNING -->
+      <div class="agent-card fade-in">
+        <div class="agent-card-header">
+          <div class="agent-icon icon-learning">🔄</div>
+          <div>
+            <div class="agent-name">Learning Agent</div>
+            <span class="agent-tag tag-intelligence">Self-Improvement</span>
+          </div>
+        </div>
+        <div class="agent-desc">The reflection loop of the system. Analyzes rejection patterns across all rejected jobs, cross-references with skill gaps identified at application time, and produces updated learning recommendations to improve future match scores.</div>
+        <ul class="agent-features">
+          <li>Queries all rejected jobs + their associated SkillGap records</li>
+          <li>Identifies top 3 recurring missing skills (by frequency)</li>
+          <li>Revised prioritized learning plan (3–5 items)</li>
+          <li>Job search strategy adjustment suggestions</li>
+          <li>Closes the agentic feedback loop over time</li>
+        </ul>
+      </div>
+
+      <!-- SALARY INTELLIGENCE -->
+      <div class="agent-card fade-in">
+        <div class="agent-card-header">
+          <div class="agent-icon icon-salary">💰</div>
+          <div>
+            <div class="agent-name">Salary Intelligence Agent</div>
+            <span class="agent-tag tag-intelligence">Intelligence</span>
+          </div>
+        </div>
+        <div class="agent-desc">Provides market salary range estimates for the current job's role/location/experience level, compares against the posted range, and generates 3–4 specific salary negotiation talking points tailored to the user's strengths.</div>
+        <ul class="agent-features">
+          <li>Market salary estimate (clearly framed as estimate, not live data)</li>
+          <li>Comparison: posted salary vs. market estimate</li>
+          <li>3–4 actionable negotiation talking points</li>
+          <li>Tailored to user's profile strengths and experience level</li>
+        </ul>
+      </div>
+
+    </div><!-- /.agents-grid -->
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 4: WORKFLOW -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div class="divider"></div>
+<section class="slide" id="slide-workflow" style="min-height:auto; padding: 80px 2rem;">
+  <div class="slide-container">
+    <div class="section-label fade-in">LangGraph Execution</div>
+    <h2 class="section-title fade-in">Agent Pipeline Workflow</h2>
+    <p class="section-desc fade-in">When you click "Run Pipeline", CareerPilot executes this LangGraph workflow. The Planning agent sets the route; the Supervisor follows it deterministically.</p>
+
+    <!-- Flow Visual -->
+    <div class="flow-diagram fade-in" style="margin-bottom:2rem;">
+      <div class="flow-row">
+        <div class="flow-node start">▶ START</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node agent">📋 Planning Agent</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node supervisor">🎯 Supervisor</div>
+      </div>
+      <div class="flow-label" style="margin:8px 0">Supervisor routes to each agent in the plan, one at a time</div>
+      <div class="flow-row" style="flex-wrap:wrap; gap:0.5rem; justify-content:center; margin:12px 0;">
+        <div class="flow-node agent">👤 Profile Intel</div>
+        <div class="flow-arrow">↔</div>
+        <div class="flow-node agent">🔍 Job Scout</div>
+        <div class="flow-arrow">↔</div>
+        <div class="flow-node agent">⭐ Job Ranking</div>
+        <div class="flow-arrow">↔</div>
+        <div class="flow-node agent">🎓 Skill Gap</div>
+        <div class="flow-arrow">↔</div>
+        <div class="flow-node agent">📄 Resume Opt</div>
+        <div class="flow-arrow">↔</div>
+        <div class="flow-node agent">✉️ Cover Letter</div>
+      </div>
+      <div class="flow-row">
+        <div class="flow-node human">🔐 Application Agent → PAUSED (awaiting human approval)</div>
+      </div>
+      <div class="flow-label" style="margin:8px 0">After user approves in UI → pipeline resumes</div>
+      <div class="flow-row">
+        <div class="flow-node agent">🎤 Interview Prep</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node agent">📊 Tracking</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node end">■ END</div>
+      </div>
+    </div>
+
+    <!-- Step-by-step -->
+    <div class="workflow-steps fade-in">
+
+      <div class="workflow-step">
+        <div class="step-number">1</div>
+        <div class="step-content">
+          <div class="step-title">Task Decomposition</div>
+          <div class="step-desc">User types a natural-language task. The Planning Agent converts it into an ordered list of agents via LLM, stored as state["plan"]. This plan is then followed deterministically without further LLM routing calls.</div>
+          <div class="step-agents"><span class="step-agent-chip">Planning Agent</span></div>
+        </div>
+      </div>
+      <div class="workflow-connector"></div>
+
+      <div class="workflow-step">
+        <div class="step-number">2</div>
+        <div class="step-content">
+          <div class="step-title">Profile Analysis &amp; Indexing</div>
+          <div class="step-desc">Profile Intelligence reads resume text + GitHub, extracts structured fields with LLM, saves to DB, and indexes into ChromaDB for RAG retrieval by downstream agents.</div>
+          <div class="step-agents"><span class="step-agent-chip">Profile Intelligence</span></div>
+        </div>
+      </div>
+      <div class="workflow-connector"></div>
+
+      <div class="workflow-step">
+        <div class="step-number">3</div>
+        <div class="step-content">
+          <div class="step-title">Job Discovery &amp; Scoring</div>
+          <div class="step-desc">Job Scout generates search queries and fans across job boards. Job Ranking scores each discovered job 0–100 using a weighted multi-factor algorithm. Best match becomes current_job.</div>
+          <div class="step-agents"><span class="step-agent-chip">Job Scout</span><span class="step-agent-chip">Job Ranking</span></div>
+        </div>
+      </div>
+      <div class="workflow-connector"></div>
+
+      <div class="workflow-step">
+        <div class="step-number">4</div>
+        <div class="step-content">
+          <div class="step-title">Gap Analysis &amp; Application Preparation</div>
+          <div class="step-desc">Skill Gap identifies missing skills and produces a learning roadmap. Resume Optimization tailors the resume using RAG-retrieved context. Cover Letter Agent writes a personalized cover letter + 3 outreach templates.</div>
+          <div class="step-agents"><span class="step-agent-chip">Skill Gap</span><span class="step-agent-chip">Resume Optimization</span><span class="step-agent-chip">Cover Letter</span></div>
+        </div>
+      </div>
+      <div class="workflow-connector"></div>
+
+      <div class="workflow-step" style="border-color:rgba(244,114,182,0.4)">
+        <div class="step-number" style="background:linear-gradient(135deg,#f472b6,#db2777)">5</div>
+        <div class="step-content">
+          <div class="step-title">🔐 Human-in-the-Loop Checkpoint</div>
+          <div class="step-desc">Application Agent packages everything and sets requires_approval=True. The Supervisor immediately routes to FINISH, pausing the graph. The user reviews the full package in the Approvals tab and explicitly approves or rejects.</div>
+          <div class="step-agents"><span class="step-agent-chip" style="background:rgba(244,114,182,0.15);color:#f9a8d4;border-color:rgba(244,114,182,0.3)">Application Agent</span></div>
+        </div>
+      </div>
+      <div class="workflow-connector"></div>
+
+      <div class="workflow-step">
+        <div class="step-number">6</div>
+        <div class="step-content">
+          <div class="step-title">Interview Prep &amp; Tracking</div>
+          <div class="step-desc">After approval, Interview Prep generates company research, technical questions, behavioral questions, and a DSA roadmap. Tracking Agent updates status and computes dashboard analytics.</div>
+          <div class="step-agents"><span class="step-agent-chip">Interview Prep</span><span class="step-agent-chip">Tracking</span></div>
+        </div>
+      </div>
+      <div class="workflow-connector"></div>
+
+      <div class="workflow-step">
+        <div class="step-number">7</div>
+        <div class="step-content">
+          <div class="step-title">Continuous Improvement (Background)</div>
+          <div class="step-desc">Learning Agent runs periodically to analyze rejection patterns. Notification Agent sends daily summaries. GitHub, Portfolio, Networking, and Salary Intelligence agents run on-demand to enhance the user's overall career profile.</div>
+          <div class="step-agents"><span class="step-agent-chip">Learning</span><span class="step-agent-chip">Notification</span><span class="step-agent-chip">GitHub Enhancement</span><span class="step-agent-chip">Portfolio</span><span class="step-agent-chip">Networking</span><span class="step-agent-chip">Salary Intelligence</span></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 5: UI GUIDE -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div class="divider"></div>
+<section class="slide" id="slide-ui" style="min-height:auto; padding: 80px 2rem;">
+  <div class="slide-container">
+    <div class="section-label fade-in">Frontend Guide</div>
+    <h2 class="section-title fade-in">UI: Every Button Explained</h2>
+    <p class="section-desc fade-in">The Streamlit dashboard has 4 tabs. Here's an interactive mockup showing every button and what it does.</p>
+
+    <!-- Tab Selector -->
+    <div class="ui-tabs fade-in">
+      <div class="ui-tab active" onclick="switchTab('profile')">👤 Profile Tab</div>
+      <div class="ui-tab" onclick="switchTab('run')">🤖 Run Agents Tab</div>
+      <div class="ui-tab" onclick="switchTab('approvals')">✅ Approvals Tab</div>
+      <div class="ui-tab" onclick="switchTab('dashboard')">📊 Dashboard Tab</div>
+    </div>
+
+    <!-- PROFILE TAB -->
+    <div id="panel-profile" class="ui-panel active fade-in">
+      <div class="mockup-window">
+        <div class="mockup-titlebar">
+          <div class="titlebar-dots"><div class="dot dot-red"></div><div class="dot dot-yellow"></div><div class="dot dot-green"></div></div>
+          <div class="titlebar-title">CareerPilot AI · localhost:8501 · 👤 Profile Tab</div>
+        </div>
+        <div class="mockup-content">
+          <h3 style="font-size:1rem;margin-bottom:1rem;font-weight:700">Profile Setup</h3>
+          <div class="form-row">
+            <div class="form-field"><div class="form-label">Name</div><input class="form-input" value="Alex Johnson" readonly /></div>
+            <div class="form-field"><div class="form-label">Email</div><input class="form-input" value="alex@example.com" readonly /></div>
+          </div>
+          <div class="form-row">
+            <div class="form-field"><div class="form-label">GitHub URL</div><input class="form-input" value="https://github.com/alexj" readonly /></div>
+            <div class="form-field"><div class="form-label">LinkedIn URL</div><input class="form-input" value="https://linkedin.com/in/alexj" readonly /></div>
+          </div>
+          <div class="form-row">
+            <div class="form-field"><div class="form-label">Target Roles</div><input class="form-input" value="AI Engineer, Backend Engineer" readonly /></div>
+            <div class="form-field"><div class="form-label">Remote Preference</div><input class="form-input" value="remote" readonly /></div>
+          </div>
+          <div class="form-field" style="margin-bottom:1rem">
+            <div class="form-label">Resume Text</div>
+            <textarea class="form-textarea" readonly>Senior Software Engineer with 5+ years in Python, FastAPI, LangChain... Led ML pipeline development at TechCorp, delivered 3 production RAG systems...</textarea>
+          </div>
+          <div style="display:flex; gap:1rem; align-items:center; margin-bottom:1.5rem;">
+            <button class="btn btn-primary" title="POST /profiles — Creates or updates your profile. Triggers Profile Intelligence Agent to extract structured data from your resume and GitHub, stores to DB, and indexes into ChromaDB RAG.">
+              ✨ Create / Update Profile
+            </button>
+            <div style="font-size:0.75rem;color:var(--text-muted)">→ Calls POST /profiles · Runs Profile Intelligence Agent</div>
+          </div>
+          <hr style="border:none;border-top:1px solid var(--border);margin:1rem 0"/>
+          <div style="display:flex; gap:1rem; align-items:center;">
+            <input class="form-input" value="1" style="width:120px" readonly/>
+            <button class="btn btn-secondary" title="GET /profiles/{id} — Loads an existing profile by its numeric ID and displays the raw JSON data extracted by the Profile Intelligence Agent.">
+              📂 Load Profile
+            </button>
+            <div style="font-size:0.75rem;color:var(--text-muted)">→ Calls GET /profiles/{id}</div>
+          </div>
+        </div>
+      </div>
+      <div class="highlight-box">
+        <h4>Button Functions — Profile Tab</h4>
+        <p>
+          <strong style="color:var(--accent2)">Create / Update Profile</strong> → Sends your name, email, resume text, links, and preferences to <code>POST /profiles</code>. Stores them in SQLite and sets the session's active user_id. 
+          <br><br>
+          <strong style="color:var(--accent2)">Load Profile</strong> → Fetches an existing profile by numeric ID via <code>GET /profiles/{id}</code> and displays the extracted JSON (skills, experience, projects, etc.) so you can verify what the Profile Intelligence Agent extracted.
+        </p>
+      </div>
+    </div>
+
+    <!-- RUN AGENTS TAB -->
+    <div id="panel-run" class="ui-panel fade-in">
+      <div class="mockup-window">
+        <div class="mockup-titlebar">
+          <div class="titlebar-dots"><div class="dot dot-red"></div><div class="dot dot-yellow"></div><div class="dot dot-green"></div></div>
+          <div class="titlebar-title">CareerPilot AI · localhost:8501 · 🤖 Run Agents Tab</div>
+        </div>
+        <div class="mockup-content">
+          <h3 style="font-size:1rem;margin-bottom:0.25rem;font-weight:700">Run Autonomous Agent Pipeline</h3>
+          <p style="font-size:0.78rem;color:var(--text-muted);margin-bottom:1rem">Active profile ID: <strong>1</strong></p>
+          <div class="form-field" style="margin-bottom:1rem">
+            <div class="form-label">What should CareerPilot do?</div>
+            <textarea class="form-textarea" readonly>Find me relevant AI Engineer jobs, score them, and prepare an application package for the best match.</textarea>
+          </div>
+          <div style="display:flex;gap:1rem;align-items:center;margin-bottom:1.5rem;">
+            <button class="btn btn-primary" style="font-size:1rem;padding:12px 28px">▶️ Run Pipeline</button>
+            <div style="font-size:0.75rem;color:var(--text-muted)">→ POST /run · Executes full LangGraph workflow</div>
+          </div>
+          <!-- Execution log -->
+          <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:10px;padding:1rem;margin-bottom:1rem;">
+            <div style="font-size:0.75rem;font-weight:600;margin-bottom:0.5rem;color:var(--text-muted)">Execution Log</div>
+            <div class="log-line"><span class="log-prefix">[planning]</span><span class="log-text">generated plan: ['profile_intelligence', 'job_scout', 'job_ranking', 'skill_gap', 'resume_optimization', 'cover_letter', 'application']</span></div>
+            <div class="log-line"><span class="log-prefix">[supervisor]</span><span class="log-text">(plan step 1/7) routing to 'profile_intelligence'</span></div>
+            <div class="log-line"><span class="log-prefix">[profile_intelligence]</span><span class="log-text">completed: profile extracted and indexed</span></div>
+            <div class="log-line"><span class="log-prefix">[job_scout]</span><span class="log-text">completed: discovered 12 jobs via queries ['AI Engineer LangChain', 'Backend Engineer Python']</span></div>
+            <div class="log-line"><span class="log-prefix">[job_ranking]</span><span class="log-text">top match 'AI Engineer' at Acme Corp (87.5/100)</span></div>
+            <div class="log-line"><span class="log-prefix">[application]</span><span class="log-text">AWAITING HUMAN APPROVAL (application_id=3)</span></div>
+          </div>
+          <div class="alert-warning">⚠️ An application package is ready and awaiting your approval. Go to the <strong>Approvals</strong> tab to review it.</div>
+        </div>
+      </div>
+      <div class="highlight-box">
+        <h4>Button Functions — Run Agents Tab</h4>
+        <p>
+          <strong style="color:var(--accent2)">▶️ Run Pipeline</strong> → The main action button. Sends your task text + user_id to <code>POST /run</code> with a 300-second timeout (agents take time). This triggers the full LangGraph workflow: Planning → Supervisor → all specialist agents in sequence. Returns the final state including execution logs, current_job, and approval_payload if the Application Agent was triggered.
+        </p>
+      </div>
+    </div>
+
+    <!-- APPROVALS TAB -->
+    <div id="panel-approvals" class="ui-panel fade-in">
+      <div class="mockup-window">
+        <div class="mockup-titlebar">
+          <div class="titlebar-dots"><div class="dot dot-red"></div><div class="dot dot-yellow"></div><div class="dot dot-green"></div></div>
+          <div class="titlebar-title">CareerPilot AI · localhost:8501 · ✅ Approvals Tab</div>
+        </div>
+        <div class="mockup-content">
+          <h3 style="font-size:1rem;margin-bottom:0.25rem;font-weight:700">Human-in-the-Loop Approvals</h3>
+          <p style="font-size:0.78rem;color:var(--text-muted);margin-bottom:1rem">CareerPilot never submits applications automatically. Review and approve each package before applying yourself.</p>
+          <div style="display:flex;gap:1rem;align-items:center;margin-bottom:1rem;">
+            <input class="form-input" value="3" style="width:120px" readonly/>
+            <button class="btn btn-secondary">📂 Load Application</button>
+            <div style="font-size:0.75rem;color:var(--text-muted)">→ GET /applications/{id}</div>
+          </div>
+          <div class="metric-row">
+            <div class="metric-card"><div class="metric-label">ATS Score</div><div class="metric-value green">87.5/100</div></div>
+            <div class="metric-card"><div class="metric-label">Apply Method</div><div class="metric-value blue" style="font-size:1rem;margin-top:8px">Easy Apply (LinkedIn)</div></div>
+            <div class="metric-card"><div class="metric-label">Status</div><div class="metric-value orange" style="font-size:1rem;margin-top:8px">pending</div></div>
+          </div>
+          <div class="expander" style="margin-bottom:0.5rem">
+            <div class="expander-header">📄 Tailored Resume <span>▼</span></div>
+            <div class="expander-body">## Alex Johnson — AI Engineer<br/>**Summary:** Experienced AI/Backend engineer with 5+ years building production ML systems...<br/><em>(Full markdown resume generated by Resume Optimization Agent)</em></div>
+          </div>
+          <div class="expander" style="margin-bottom:0.5rem">
+            <div class="expander-header">✉️ Cover Letter <span>▼</span></div>
+            <div class="expander-body">Dear Hiring Manager at Acme Corp,<br/><br/>I am excited to apply for the AI Engineer position. In my previous role at TechCorp, I led the development of a production RAG system that reduced query latency by 60%...<br/><em>(Full cover letter generated by Cover Letter Agent)</em></div>
+          </div>
+          <div class="expander" style="margin-bottom:1rem">
+            <div class="expander-header">🤝 Outreach Messages <span>▼</span></div>
+            <div class="expander-body">RECRUITER: Hi [Name], I noticed your AI Engineer opening at Acme Corp...<br/>REFERRAL: Hey [Name], I saw you work at Acme Corp...<br/>NETWORKING: Hi [Name], I'm exploring opportunities in AI engineering...</div>
+          </div>
+          <div style="display:flex;gap:1rem;">
+            <button class="btn btn-success" style="flex:1">✅ Approve</button>
+            <button class="btn btn-danger" style="flex:1">❌ Reject</button>
+          </div>
+          <div style="font-size:0.72rem;color:var(--text-muted);margin-top:0.5rem;text-align:center">Approve → POST /applications/{id}/decision {approve: true} · Reject → {approve: false}</div>
+        </div>
+      </div>
+      <div class="highlight-box">
+        <h4>Button Functions — Approvals Tab</h4>
+        <p>
+          <strong style="color:var(--accent2)">Load Application</strong> → Fetches the full application package (resume, cover letter, outreach) via <code>GET /applications/{id}</code>. Shows ATS score, recommended apply method, and approval status.
+          <br><br>
+          <strong style="color:#34d399">✅ Approve</strong> → Sends <code>POST /applications/{id}/decision {approve: true}</code>. Marks the Application as approved in the database. You then apply manually using the tailored resume and cover letter provided.
+          <br><br>
+          <strong style="color:#f87171">❌ Reject</strong> → Sends <code>POST /applications/{id}/decision {approve: false}</code>. Marks the application as rejected so the system skips it in future runs.
+        </p>
+      </div>
+    </div>
+
+    <!-- DASHBOARD TAB -->
+    <div id="panel-dashboard" class="ui-panel fade-in">
+      <div class="mockup-window">
+        <div class="mockup-titlebar">
+          <div class="titlebar-dots"><div class="dot dot-red"></div><div class="dot dot-yellow"></div><div class="dot dot-green"></div></div>
+          <div class="titlebar-title">CareerPilot AI · localhost:8501 · 📊 Dashboard Tab</div>
+        </div>
+        <div class="mockup-content">
+          <h3 style="font-size:1rem;margin-bottom:1rem;font-weight:700">Application Tracking Dashboard</h3>
+          <div class="metric-row">
+            <div class="metric-card"><div class="metric-label">Total Jobs Tracked</div><div class="metric-value blue">24</div></div>
+            <div class="metric-card"><div class="metric-label">Status Buckets</div><div class="metric-value green">7</div></div>
+            <div class="metric-card"><div class="metric-label">Top Match Score</div><div class="metric-value orange">87.5/100</div></div>
+          </div>
+          <div style="font-weight:600;font-size:0.85rem;margin-bottom:0.75rem;">Status Breakdown</div>
+          <div class="bar-chart">
+            <div class="bar-row"><div class="bar-label">discovered</div><div class="bar-track"><div class="bar-fill" style="width:75%;background:linear-gradient(to right,#6384ff,#a78bfa)"></div></div><span style="font-size:0.72rem;color:var(--text-muted)">18</span></div>
+            <div class="bar-row"><div class="bar-label">applied</div><div class="bar-track"><div class="bar-fill" style="width:25%;background:linear-gradient(to right,#34d399,#059669)"></div></div><span style="font-size:0.72rem;color:var(--text-muted)">6</span></div>
+            <div class="bar-row"><div class="bar-label">interview</div><div class="bar-track"><div class="bar-fill" style="width:12%;background:linear-gradient(to right,#fb923c,#ea580c)"></div></div><span style="font-size:0.72rem;color:var(--text-muted)">3</span></div>
+            <div class="bar-row"><div class="bar-label">rejected</div><div class="bar-track"><div class="bar-fill" style="width:8%;background:linear-gradient(to right,#f87171,#dc2626)"></div></div><span style="font-size:0.72rem;color:var(--text-muted)">2</span></div>
+          </div>
+          <div style="font-weight:600;font-size:0.85rem;margin:1rem 0 0.75rem;">All Jobs (with status updater)</div>
+          <div class="job-row">
+            <div><div class="job-title-text">AI Engineer @ Acme Corp</div><div class="job-company">LinkedIn · Bangalore</div></div>
+            <div style="display:flex;align-items:center;gap:0.75rem">
+              <span class="score-badge score-high">87.5/100</span>
+              <span class="status-chip status-approved">approved</span>
+              <button class="btn btn-secondary" style="padding:5px 12px;font-size:0.72rem">Update →</button>
+            </div>
+          </div>
+          <div class="job-row">
+            <div><div class="job-title-text">Backend Engineer @ Globex</div><div class="job-company">Indeed · Remote</div></div>
+            <div style="display:flex;align-items:center;gap:0.75rem">
+              <span class="score-badge score-mid">72.0/100</span>
+              <span class="status-chip status-pending">awaiting</span>
+              <button class="btn btn-secondary" style="padding:5px 12px;font-size:0.72rem">Update →</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="highlight-box">
+        <h4>Button Functions — Dashboard Tab</h4>
+        <p>
+          <strong style="color:var(--accent2)">Dashboard loads automatically</strong> when the tab opens — calls <code>GET /users/{id}/dashboard</code> to show total jobs, status breakdown as a bar chart, and top match scores.
+          <br><br>
+          <strong style="color:var(--accent2)">Update (per job)</strong> → Each job card has a status selectbox + Update button. Sends <code>PATCH /jobs/{id}/status</code> with the new status (e.g., "applied", "interview", "offer", "rejected"). This creates a TrackingEvent audit record and updates dashboard analytics.
+        </p>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 6: TECH STACK -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div class="divider"></div>
+<section class="slide" id="slide-tech" style="min-height:auto; padding: 80px 2rem;">
+  <div class="slide-container">
+    <div class="section-label fade-in">Technology</div>
+    <h2 class="section-title fade-in">Tech Stack</h2>
+    <p class="section-desc fade-in">Every component was chosen for production-readiness, extensibility, and the multi-agent paradigm.</p>
+
+    <div class="tech-grid fade-in">
+      <div class="tech-card"><div class="tech-icon">🔗</div><div class="tech-name">LangGraph</div><div class="tech-desc">Multi-agent workflow orchestration with state machine, MemorySaver checkpoints, and human-in-the-loop pausing</div></div>
+      <div class="tech-card"><div class="tech-icon">🤖</div><div class="tech-name">Gemini / OpenAI</div><div class="tech-desc">LLM backend — switchable via LLM_PROVIDER env var. Gemini default for chat + embeddings</div></div>
+      <div class="tech-card"><div class="tech-icon">🔍</div><div class="tech-name">ChromaDB (RAG)</div><div class="tech-desc">Per-user vector store for resume and project document retrieval during resume optimization</div></div>
+      <div class="tech-card"><div class="tech-icon">⚡</div><div class="tech-name">FastAPI</div><div class="tech-desc">Async REST API layer with Pydantic schemas, 10 endpoints, and SQLAlchemy ORM integration</div></div>
+      <div class="tech-card"><div class="tech-icon">🎨</div><div class="tech-name">Streamlit</div><div class="tech-desc">4-tab dashboard frontend — Profile, Run Agents, Approvals, Dashboard</div></div>
+      <div class="tech-card"><div class="tech-icon">🗄️</div><div class="tech-name">SQLite / Postgres</div><div class="tech-desc">8-table schema: profiles, jobs, skill_gaps, applications, interview_prep, tracking_events, agent_runs, notifications</div></div>
+      <div class="tech-card"><div class="tech-icon">🛠️</div><div class="tech-name">MCP Tools</div><div class="tech-desc">Pluggable Model Context Protocol tool functions for GitHub API, job board search, and notifications</div></div>
+      <div class="tech-card"><div class="tech-icon">🐳</div><div class="tech-name">Docker</div><div class="tech-desc">docker-compose setup with separate backend/frontend Dockerfiles for one-command deployment</div></div>
+      <div class="tech-card"><div class="tech-icon">📊</div><div class="tech-name">LangSmith</div><div class="tech-desc">Observability and tracing for all LLM calls and agent runs (enable via env var)</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 7: HOW IT WORKS (DEEP DIVE) -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div class="divider"></div>
+<section class="slide" id="slide-how" style="min-height:auto; padding: 80px 2rem;">
+  <div class="slide-container">
+    <div class="section-label fade-in">Deep Dive</div>
+    <h2 class="section-title fade-in">How the Agents Work Together</h2>
+    <p class="section-desc fade-in">Under the hood: state sharing, RAG retrieval, safety mechanisms, and the self-improvement feedback loop.</p>
+
+    <div class="how-it-works fade-in">
+
+      <div class="how-section">
+        <h3>🧠 Shared State (LangGraph)</h3>
+        <ul class="how-list">
+          <li><div class="bullet"></div>All agents communicate via a single <code>CareerPilotState</code> TypedDict passed through the graph</li>
+          <li><div class="bullet"></div><strong>plan</strong> — ordered list of agents to run (set by Planning Agent)</li>
+          <li><div class="bullet"></div><strong>profile</strong> — extracted user data (set by Profile Intelligence)</li>
+          <li><div class="bullet"></div><strong>raw_jobs / scored_jobs</strong> — job lists flowing Scout→Ranking</li>
+          <li><div class="bullet"></div><strong>current_job</strong> — best-scored job, drives the per-job sub-pipeline</li>
+          <li><div class="bullet"></div><strong>tailored_resume / cover_letter</strong> — generated documents</li>
+          <li><div class="bullet"></div><strong>requires_approval + approval_status</strong> — human checkpoint flags</li>
+          <li><div class="bullet"></div><strong>logs</strong> — append-only execution log for UI display</li>
+          <li><div class="bullet"></div><strong>scratch</strong> — agent-specific side data (analytics, suggestions)</li>
+        </ul>
+      </div>
+
+      <div class="how-section">
+        <h3>🔍 RAG Architecture</h3>
+        <ul class="how-list">
+          <li><div class="bullet"></div>Each user gets their own ChromaDB collection: <code>user_{id}_docs</code></li>
+          <li><div class="bullet"></div>Profile Intelligence indexes resume text + each project as separate documents</li>
+          <li><div class="bullet"></div>Resume Optimization retrieves top-4 chunks using job title + required skills as the query</li>
+          <li><div class="bullet"></div>This grounds the LLM output in the user's actual real past work</li>
+          <li><div class="bullet"></div>Embeddings use the same provider as the LLM (Gemini or OpenAI)</li>
+        </ul>
+      </div>
+
+      <div class="how-section">
+        <h3>🔐 Safety Architecture</h3>
+        <ul class="how-list">
+          <li><div class="bullet"></div>Application Agent NEVER submits — only packages and requests approval</li>
+          <li><div class="bullet"></div>Supervisor detects requires_approval=True and routes to FINISH</li>
+          <li><div class="bullet"></div>LangGraph pauses at MemorySaver checkpoint until user decision</li>
+          <li><div class="bullet"></div>User approves via UI → POST /applications/{id}/decision</li>
+          <li><div class="bullet"></div>MAX_STEPS=12 prevents infinite supervisor loops</li>
+          <li><div class="bullet"></div>LLM fallback guards against re-picking completed agents</li>
+        </ul>
+      </div>
+
+      <div class="how-section">
+        <h3>🔄 Self-Improvement Loop</h3>
+        <ul class="how-list">
+          <li><div class="bullet"></div>Learning Agent queries all Job rows with status="rejected"</li>
+          <li><div class="bullet"></div>Joins with SkillGap records to find what skills were missing</li>
+          <li><div class="bullet"></div>Counts frequency of each missing skill across all rejections</li>
+          <li><div class="bullet"></div>LLM synthesizes: top 3 recurring gaps + revised learning plan + strategy adjustment</li>
+          <li><div class="bullet"></div>This creates a virtuous feedback loop improving match scores over time</li>
+        </ul>
+      </div>
+
+      <div class="how-section">
+        <h3>📦 MCP Tool Layer</h3>
+        <ul class="how-list">
+          <li><div class="bullet"></div><code>fetch_github_profile(url)</code> — fetches public GitHub repos summary</li>
+          <li><div class="bullet"></div><code>search_jobs_external(query, location, source)</code> — searches LinkedIn, Indeed, Naukri, Wellfound</li>
+          <li><div class="bullet"></div><code>send_notification(channel, title, body)</code> — Email/Telegram/Discord</li>
+          <li><div class="bullet"></div>Functions have exact MCP signatures — swap mock bodies for real API calls without changing any agent code</li>
+        </ul>
+      </div>
+
+      <div class="how-section">
+        <h3>🗃️ Memory Architecture</h3>
+        <ul class="how-list">
+          <li><div class="bullet"></div><strong>Short-term:</strong> CareerPilotState flows through the graph for one run</li>
+          <li><div class="bullet"></div><strong>Long-term:</strong> SQLite/Postgres persists profiles, jobs, applications across runs</li>
+          <li><div class="bullet"></div><strong>Semantic:</strong> ChromaDB vector store for RAG over personal documents</li>
+          <li><div class="bullet"></div><strong>Checkpointed:</strong> LangGraph MemorySaver enables pause/resume for HITL</li>
+          <li><div class="bullet"></div><strong>Observability:</strong> AgentRun table logs every agent invocation with timing and status</li>
+        </ul>
+      </div>
+
+    </div>
+
+    <!-- Code sample -->
+    <div style="margin-top:2rem;" class="fade-in">
+      <div style="font-size:0.85rem;font-weight:600;margin-bottom:0.75rem;color:var(--text-muted)">BaseAgent — How every agent is structured</div>
+      <div class="code-block">
+<span class="comment"># Every agent inherits from BaseAgent</span>
+<span class="kw">class</span> <span class="fn">ResumeOptimizationAgent</span>(BaseAgent):
+    name = <span class="str">"resume_optimization"</span>
+
+    <span class="kw">def</span> <span class="fn">run</span>(self, state: Dict[str, Any]) -> Dict[str, Any]:
+        <span class="comment"># 1. Read from shared state</span>
+        profile = state.get(<span class="str">"profile"</span>, {})
+        job = state.get(<span class="str">"current_job"</span>, {})
+
+        <span class="comment"># 2. RAG retrieval — grounded in real user docs</span>
+        store = PersonalDocStore(user_id=state[<span class="str">"user_id"</span>])
+        chunks = store.query(job[<span class="str">"title"</span>] + required_skills, n_results=4)
+
+        <span class="comment"># 3. LLM call with rich context</span>
+        tailored_resume = self.<span class="fn">invoke_llm</span>(RESUME_PROMPT.format(...))
+
+        <span class="comment"># 4. Return partial state update</span>
+        <span class="kw">return</span> {
+            <span class="str">"tailored_resume"</span>: tailored_resume,
+            <span class="str">"logs"</span>: [<span class="str">"[resume_optimization] completed"</span>],
+        }
+<span class="comment">
+# BaseAgent.__call__ wraps run() with:
+#   - Timing measurement
+#   - Error handling → status="error" in AgentRun table
+#   - DB logging of every invocation (agent_runs table)</span>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- FOOTER -->
+<div class="divider"></div>
+<footer>
+  <p>🚀 <strong>CareerPilot AI</strong> — Autonomous Multi-Agent Career Operating System</p>
+  <p style="margin-top:8px">Built with LangGraph · Gemini · FastAPI · ChromaDB · Streamlit</p>
+  <p style="margin-top:8px; font-size:0.72rem; opacity:0.5">17 Agents · Human-in-the-Loop Safety · RAG-Grounded · MCP-Ready</p>
+</footer>
+
+<script>
+  // ── Tab switching ──
+  function switchTab(tab) {
+    document.querySelectorAll('.ui-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.ui-panel').forEach(p => p.classList.remove('active'));
+    const tabIdx = {profile:0, run:1, approvals:2, dashboard:3};
+    document.querySelectorAll('.ui-tab')[tabIdx[tab]].classList.add('active');
+    document.getElementById('panel-' + tab).classList.add('active');
+  }
+
+  // ── Nav scroll ──
+  function scrollTo(id) {
+    document.getElementById(id).scrollIntoView({behavior:'smooth'});
+  }
+
+  // ── Intersection Observer for fade-in ──
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+  // ── Nav active link ──
+  const sections = ['slide-hero','slide-arch','slide-agents','slide-workflow','slide-ui','slide-tech','slide-how'];
+  const navLinks = document.querySelectorAll('.nav-link');
+
+  window.addEventListener('scroll', () => {
+    let current = '';
+    sections.forEach(id => {
+      const el = document.getElementById(id);
+      if (el && el.getBoundingClientRect().top < 200) {
+        current = id;
+      }
+    });
+    navLinks.forEach(link => {
+      link.classList.remove('active');
+      const map = {
+        'slide-hero':'Overview','slide-arch':'Overview',
+        'slide-agents':'Agents','slide-workflow':'Workflow',
+        'slide-ui':'UI Guide','slide-tech':'Tech Stack','slide-how':'How It Works'
+      };
+      if (map[current] && link.textContent.trim() === map[current]) {
+        link.classList.add('active');
+      }
+    });
+  });
+
+  // ── Expander toggle ──
+  document.querySelectorAll('.expander-header').forEach(h => {
+    h.addEventListener('click', () => {
+      const body = h.nextElementSibling;
+      body.style.display = body.style.display === 'none' ? 'block' : 'none';
+    });
+  });
+</script>
+</body>
+</html>
